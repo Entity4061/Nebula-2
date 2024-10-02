@@ -29,41 +29,26 @@
             const vertexShader = await loadShader('vertexShader.glsl');
             const fragmentShader = await loadShader('fragmentShader.glsl');
 
+            // Load texture
+            const textureLoader = new THREE.TextureLoader();
+            const texture = textureLoader.load('butterfly_nebula.png');
+
             // Create shader material
             const material = new THREE.ShaderMaterial({
                 vertexShader: vertexShader,
                 fragmentShader: fragmentShader,
-                transparent: true,
-                vertexColors: true
+                uniforms: {
+                    texture: { value: texture }
+                },
+                transparent: true
             });
 
-            // Create particle system
-            const particles = 10000;
-            const geometry = new THREE.BufferGeometry();
-            const positions = [];
-            const colors = [];
-            const sizes = [];
-
-            for (let i = 0; i < particles; i++) {
-                positions.push((Math.random() * 2 - 1) * 50);
-                positions.push((Math.random() * 2 - 1) * 50);
-                positions.push((Math.random() * 2 - 1) * 50);
-
-                colors.push(Math.random());
-                colors.push(Math.random());
-                colors.push(Math.random());
-
-                sizes.push(10);
-            }
-
-            geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-            geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-            geometry.setAttribute('size', new THREE.Float32BufferAttribute(sizes, 1));
-
-            const nebula = new THREE.Points(geometry, material);
+            // Create geometry and mesh
+            const geometry = new THREE.PlaneGeometry(100, 100);
+            const nebula = new THREE.Mesh(geometry, material);
             scene.add(nebula);
 
-            camera.position.z = 100;
+            camera.position.z = 150;
 
             // Animation loop
             function animate() {
