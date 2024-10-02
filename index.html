@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Nebula</title>
+    <title>3D Butterfly Nebula</title>
     <style>
         body { margin: 0; }
         canvas { display: block; }
@@ -11,66 +11,47 @@
 </head>
 <body>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script id="vertexShader" type="x-shader/x-vertex">
-        varying vec2 vUv;
-        void main() {
-            vUv = uv;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-    </script>
-    <script id="fragmentShader" type="x-shader/x-fragment">
-        uniform sampler2D texture;
-        varying vec2 vUv;
-        void main() {
-            vec4 color = texture2D(texture, vUv);
-            gl_FragColor = vec4(color.rgb, color.a);
-        }
-    </script>
     <script>
-        async function init() {
-            // Basic Three.js setup
-            const scene = new THREE.Scene();
-            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            const renderer = new THREE.WebGLRenderer();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            document.body.appendChild(renderer.domElement);
+        // Scene setup
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
 
-            // Load shaders from script tags
-            const vertexShader = document.getElementById('vertexShader').textContent;
-            const fragmentShader = document.getElementById('fragmentShader').textContent;
+        // Nebula geometry
+        const nebulaMaterial = new THREE.MeshBasicMaterial({
+            color: 0xff69b4,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.5
+        });
 
-            // Load texture
-            const textureLoader = new THREE.TextureLoader();
-            const texture = textureLoader.load('butterfly_nebula.png');
+        const lobe1 = new THREE.ConeGeometry(5, 20, 32);
+        const lobe2 = new THREE.ConeGeometry(5, 20, 32);
 
-            // Create shader material
-            const material = new THREE.ShaderMaterial({
-                vertexShader: vertexShader,
-                fragmentShader: fragmentShader,
-                uniforms: {
-                    texture: { value: texture }
-                },
-                transparent: true
-            });
+        const nebulaLobe1 = new THREE.Mesh(lobe1, nebulaMaterial);
+        const nebulaLobe2 = new THREE.Mesh(lobe2, nebulaMaterial);
 
-            // Create geometry and mesh
-            const geometry = new THREE.PlaneGeometry(100, 100);
-            const nebula = new THREE.Mesh(geometry, material);
-            scene.add(nebula);
+        nebulaLobe1.position.set(0, 10, 0);
+        nebulaLobe1.rotation.z = Math.PI / 2;
 
-            camera.position.z = 150;
+        nebulaLobe2.position.set(0, -10, 0);
+        nebulaLobe2.rotation.z = -Math.PI / 2;
 
-            // Animation loop
-            function animate() {
-                requestAnimationFrame(animate);
-                nebula.rotation.y += 0.001; // Slow rotation
-                renderer.render(scene, camera);
-            }
+        scene.add(nebulaLobe1);
+        scene.add(nebulaLobe2);
 
-            animate();
+        camera.position.z = 50;
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            nebulaLobe1.rotation.y += 0.01;
+            nebulaLobe2.rotation.y += 0.01;
+            renderer.render(scene, camera);
         }
-
-        init();
+        animate();
     </script>
 </body>
 </html>
