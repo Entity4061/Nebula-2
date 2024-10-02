@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Butterfly Nebula</title>
+    <title>3D Realistic Gas-Like Nebula</title>
     <style>
         body { margin: 0; }
         canvas { display: block; }
@@ -11,6 +11,25 @@
 </head>
 <body>
     <script src="three.js"></script>
+    <script id="vertexShader" type="x-shader/x-vertex">
+        varying vec3 vPosition;
+        void main() {
+            vPosition = position;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+    </script>
+    <script id="fragmentShader" type="x-shader/x-fragment">
+        uniform float time;
+        varying vec3 vPosition;
+        float random(vec3 scale, float seed) {
+            return fract(sin(dot(vPosition + seed, scale)) * 43758.5453 + seed);
+        }
+        void main() {
+            float noise = random(vec3(12.9898, 78.233, 151.7182), time);
+            float intensity = 0.5 + 0.5 * noise;
+            gl_FragColor = vec4(0.5, 0.0, 0.5, intensity); // Purple color
+        }
+    </script>
     <script>
         // Scene setup
         const scene = new THREE.Scene();
@@ -19,34 +38,18 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
-        // Nebula particle system
-        const particles = new THREE.BufferGeometry();
-        const particleCount = 50000;
-        const positions = new Float32Array(particleCount * 3);
-        const colors = new Float32Array(particleCount * 3);
-
-        for (let i = 0; i < particleCount; i++) {
-            const x = (Math.random() - 0.5) * 100;
-            const y = (Math.random() - 0.5) * 100;
-            const z = (Math.random() - 0.5) * 100;
-            positions.set([x, y, z], i * 3);
-
-            const color = new THREE.Color(0x800080); // Purple color
-            colors.set([color.r, color.g, color.b], i * 3);
-        }
-
-        particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        particles.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-
-        const particleMaterial = new THREE.PointsMaterial({
-            size: 0.5,
-            vertexColors: true,
-            transparent: true,
-            opacity: 0.7,
-            blending: THREE.AdditiveBlending
+        // Nebula geometry
+        const geometry = new THREE.SphereGeometry(50, 64, 64);
+        const material = new THREE.ShaderMaterial({
+            vertexShader: document.getElementById('vertexShader').textContent,
+            fragmentShader: document.getElementById('fragmentShader').textContent,
+            uniforms: {
+                time: { value: 1.0 }
+            },
+            transparent: true
         });
 
-        const nebula = new THREE.Points(particles, particleMaterial);
+        const nebula = new THREE.Mesh(geometry, material);
         scene.add(nebula);
 
         camera.position.z = 150;
@@ -54,6 +57,7 @@
         // Animation loop
         function animate() {
             requestAnimationFrame(animate);
+            nebula.material.uniforms.time.value += 0.01;
             nebula.rotation.y += 0.001;
             renderer.render(scene, camera);
         }
