@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Nebula</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        async function loadShader(url) {
+            const response = await fetch(url);
+            return await response.text();
+        }
+
+        async function init() {
+            // Basic Three.js setup
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            // Load shaders
+            const vertexShader = await loadShader('vertexShader.glsl');
+            const fragmentShader = await loadShader('fragmentShader.glsl');
+
+            // Create shader material
+            const material = new THREE.ShaderMaterial({
+                vertexShader: vertexShader,
+                fragmentShader: fragmentShader
+            });
+
+            // Create geometry and mesh
+            const geometry = new THREE.SphereGeometry(5, 32, 32);
+            const nebula = new THREE.Mesh(geometry, material);
+            scene.add(nebula);
+
+            camera.position.z = 10;
+
+            // Animation loop
+            function animate() {
+                requestAnimationFrame(animate);
+                nebula.rotation.y += 0.005; // Slow rotation
+                renderer.render(scene, camera);
+            }
+
+            animate();
+        }
+
+        init();
+    </script>
+</body>
+</html>
