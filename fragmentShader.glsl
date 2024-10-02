@@ -1,4 +1,8 @@
-varying vec3 vColor;
-void main() {
-    gl_FragColor = vec4(vColor, 1.0);
-}
+<script id="fragmentShader" type="x-shader/x-fragment">
+    uniform sampler2D texture;
+    varying vec2 vUv;
+    void main() {
+        vec4 color = texture2D(texture, vUv);
+        gl_FragColor = vec4(color.rgb, color.a);
+    }
+</script>
