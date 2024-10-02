@@ -11,44 +11,22 @@
 </head>
 <body>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script id="vertexShader" type="x-shader/x-vertex">
+        varying vec2 vUv;
+        void main() {
+            vUv = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+    </script>
+    <script id="fragmentShader" type="x-shader/x-fragment">
+        uniform sampler2D texture;
+        varying vec2 vUv;
+        void main() {
+            vec4 color = texture2D(texture, vUv);
+            gl_FragColor = vec4(color.rgb, color.a);
+        }
+    </script>
     <script>
-        async function loadShader(url) {
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`Failed to load shader: ${url}`);
-            }
-            const text = await response.text();
-            console.log(`Loaded shader from ${url}`);
-            return text;
-        }
-
-        async function createShaderMaterial(vertexShaderUrl, fragmentShaderUrl, textureUrl) {
-            // Load shaders
-            const vertexShader = await loadShader(vertexShaderUrl);
-            const fragmentShader = await loadShader(fragmentShaderUrl);
-
-            // Create shader material
-            const material = new THREE.ShaderMaterial({
-                vertexShader: vertexShader,
-                fragmentShader: fragmentShader,
-                uniforms: {
-                    texture: { value: new THREE.TextureLoader().load(textureUrl) }
-                },
-                transparent: true
-            });
-
-            // Check for shader compilation errors
-            material.onBeforeCompile = (shader) => {
-                shader.vertexShader = vertexShader;
-                shader.fragmentShader = fragmentShader;
-                shader.uniforms.texture = { value: new THREE.TextureLoader().load(textureUrl) };
-                console.log('Vertex Shader:', shader.vertexShader);
-                console.log('Fragment Shader:', shader.fragmentShader);
-            };
-
-            return material;
-        }
-
         async function init() {
             // Basic Three.js setup
             const scene = new THREE.Scene();
@@ -57,28 +35,39 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
             document.body.appendChild(renderer.domElement);
 
-            try {
-                // Create shader material
-                const material = await createShaderMaterial('vertexShader.glsl', 'fragmentShader.glsl', 'butterfly_nebula.png');
+            // Load shaders from script tags
+            const vertexShader = document.getElementById('vertexShader').textContent;
+            const fragmentShader = document.getElementById('fragmentShader').textContent;
 
-                // Create geometry and mesh
-                const geometry = new THREE.PlaneGeometry(100, 100);
-                const nebula = new THREE.Mesh(geometry, material);
-                scene.add(nebula);
+            // Load texture
+            const textureLoader = new THREE.TextureLoader();
+            const texture = textureLoader.load('butterfly_nebula.png');
 
-                camera.position.z = 150;
+            // Create shader material
+            const material = new THREE.ShaderMaterial({
+                vertexShader: vertexShader,
+                fragmentShader: fragmentShader,
+                uniforms: {
+                    texture: { value: texture }
+                },
+                transparent: true
+            });
 
-                // Animation loop
-                function animate() {
-                    requestAnimationFrame(animate);
-                    nebula.rotation.y += 0.001; // Slow rotation
-                    renderer.render(scene, camera);
-                }
+            // Create geometry and mesh
+            const geometry = new THREE.PlaneGeometry(100, 100);
+            const nebula = new THREE.Mesh(geometry, material);
+            scene.add(nebula);
 
-                animate();
-            } catch (error) {
-                console.error(error);
+            camera.position.z = 150;
+
+            // Animation loop
+            function animate() {
+                requestAnimationFrame(animate);
+                nebula.rotation.y += 0.001; // Slow rotation
+                renderer.render(scene, camera);
             }
+
+            animate();
         }
 
         init();
