@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Butterfly Nebula</title>
+    <title>3D Gas-Like Nebula</title>
     <style>
         body { margin: 0; }
         canvas { display: block; }
@@ -19,36 +19,42 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
-        // Nebula geometry
-        const nebulaMaterial = new THREE.MeshBasicMaterial({
-            color: 0xff69b4,
-            wireframe: true,
+        // Nebula particle system
+        const particles = new THREE.BufferGeometry();
+        const particleCount = 20000;
+        const positions = new Float32Array(particleCount * 3);
+        const colors = new Float32Array(particleCount * 3);
+
+        for (let i = 0; i < particleCount; i++) {
+            const x = (Math.random() - 0.5) * 100;
+            const y = (Math.random() - 0.5) * 100;
+            const z = (Math.random() - 0.5) * 100;
+            positions.set([x, y, z], i * 3);
+
+            const color = new THREE.Color(0x800080); // Purple color
+            colors.set([color.r, color.g, color.b], i * 3);
+        }
+
+        particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        particles.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+        const particleMaterial = new THREE.PointsMaterial({
+            size: 1,
+            vertexColors: true,
             transparent: true,
-            opacity: 0.5
+            opacity: 0.5,
+            blending: THREE.AdditiveBlending
         });
 
-        const lobe1 = new THREE.ConeGeometry(5, 20, 32);
-        const lobe2 = new THREE.ConeGeometry(5, 20, 32);
+        const nebula = new THREE.Points(particles, particleMaterial);
+        scene.add(nebula);
 
-        const nebulaLobe1 = new THREE.Mesh(lobe1, nebulaMaterial);
-        const nebulaLobe2 = new THREE.Mesh(lobe2, nebulaMaterial);
-
-        nebulaLobe1.position.set(0, 10, 0);
-        nebulaLobe1.rotation.z = Math.PI / 2;
-
-        nebulaLobe2.position.set(0, -10, 0);
-        nebulaLobe2.rotation.z = -Math.PI / 2;
-
-        scene.add(nebulaLobe1);
-        scene.add(nebulaLobe2);
-
-        camera.position.z = 50;
+        camera.position.z = 150;
 
         // Animation loop
         function animate() {
             requestAnimationFrame(animate);
-            nebulaLobe1.rotation.y += 0.01;
-            nebulaLobe2.rotation.y += 0.01;
+            nebula.rotation.y += 0.001;
             renderer.render(scene, camera);
         }
         animate();
