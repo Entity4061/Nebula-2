@@ -17,7 +17,9 @@
             if (!response.ok) {
                 throw new Error(`Failed to load shader: ${url}`);
             }
-            return await response.text();
+            const text = await response.text();
+            console.log(`Loaded shader from ${url}`);
+            return text;
         }
 
         async function createShaderMaterial(vertexShaderUrl, fragmentShaderUrl, textureUrl) {
@@ -25,19 +27,24 @@
             const vertexShader = await loadShader(vertexShaderUrl);
             const fragmentShader = await loadShader(fragmentShaderUrl);
 
-            // Load texture
-            const textureLoader = new THREE.TextureLoader();
-            const texture = textureLoader.load(textureUrl);
-
             // Create shader material
             const material = new THREE.ShaderMaterial({
                 vertexShader: vertexShader,
                 fragmentShader: fragmentShader,
                 uniforms: {
-                    texture: { value: texture }
+                    texture: { value: new THREE.TextureLoader().load(textureUrl) }
                 },
                 transparent: true
             });
+
+            // Check for shader compilation errors
+            material.onBeforeCompile = (shader) => {
+                shader.vertexShader = vertexShader;
+                shader.fragmentShader = fragmentShader;
+                shader.uniforms.texture = { value: new THREE.TextureLoader().load(textureUrl) };
+                console.log('Vertex Shader:', shader.vertexShader);
+                console.log('Fragment Shader:', shader.fragmentShader);
+            };
 
             return material;
         }
